@@ -9,18 +9,18 @@ owner: shared
 # Submission — checklist & deadline
 
 > ⏱️ **Hard deadline 19:00.** Don't be the team still polishing at 18:59. Work back from the clock — see the ship timeline below.
-> 🎯 We submit under the **Attio — The Agentic CRM** track (prize: iPad/member). Idea v3 — the voice-first real-estate lead engine. Reqs come from `[[hackathon-manual]]`; full rules in `[[rules]]`.
+> 🎯 We submit under the **Attio — The Agentic CRM** track (prize: iPad/member). Idea v4 — the voice-first real-estate lead engine with a WhatsApp → swipe-app payoff. Reqs come from `[[hackathon-manual]]`; full rules in `[[rules]]`.
 
 ## Checklist
 
-- ⬜ 2-minute video (Loom or equiv) — detailed explanation + **live walkthrough**: a buyer calls → gets qualified → Attio lead → matched listings → WhatsApp + an SLNG call → `[[demo]]`
+- ⬜ 2-minute video (Loom or equiv) — detailed explanation + **live walkthrough**: a buyer calls → gets qualified → Attio lead → matched listings → WhatsApp swipe link → swipe → write back → `[[demo]]`
 - ⬜ Public GitHub repo created → repo URL lives in `[[stack]]`
 - ⬜ README with setup + installation instructions
-- ⬜ Docs of all APIs / frameworks / tools used — call out **SLNG + Attio + n8n + Gemini** (+ Superlinked) → `[[partners]]`
-- ⬜ Enough technical documentation for jury evaluation — incl. **how the n8n orchestration runs the outreach + how the Superlinked match ranks listings** (3 people, Attio = system of record)
+- ⬜ Docs of all APIs / frameworks / tools used — call out **SLNG + Attio + n8n + Gemini** → `[[partners]]`
+- ⬜ Enough technical documentation for jury evaluation — incl. **how n8n WhatsApps the swipe link, how the swipe app writes back to Attio, + how Attio's own filter surfaces the matches** (3 people, Attio = system of record)
 - ✅ Project created newly at the event (boilerplates allowed)
 - ⬜ Team ≤5 confirmed — we are **3** → `[[team]]`
-- ⬜ ≥3 partner technologies used **and documented** — we use **4+** (SLNG + Attio + n8n + Gemini; Superlinked stretch) → `[[partners]]`
+- ⬜ ≥3 partner technologies used **and documented** — we use **4** (SLNG + Attio + n8n + Gemini; ⏭️ Superlinked dropped) → `[[partners]]`
 - ⬜ Entered under the **Attio track**
 - ⬜ Submission form filled (link TBD — get from organisers / Discord https://discord.gg/brSqTjJVdh)
 

@@ -10,7 +10,7 @@ owner: shared
 
 > The product thinking behind [[overview]], one level deeper. If this drifts from [[overview]], fix this page.
 > ⏱️ 6-hour sprint, hard deadline 19:00, 3 people. Everything here serves one working demo — see [[demo]].
-> 🔁 Idea v3 (2026-06-27): a **voice-first real-estate lead engine on Attio**. Earlier ideas (event concierge → comms-ingestion CRM) are pivot history only. → [[decisions]]
+> 🔁 Idea v3 → **v4 (2026-06-27)**: still a **voice-first real-estate lead engine on Attio**, but the payoff is now a **WhatsApp → swipe-app ("Tinder for houses")** loop, not a multichannel blast. Earlier ideas (event concierge → comms-ingestion CRM) are pivot history only. → [[decisions]]
 
 ## Problem (🤔 assumption)
 - Real-estate lead handling is **slow and manual** — a form gets filled, then sits unanswered.
@@ -23,43 +23,44 @@ owner: shared
 - **Who benefits downstream:** **buyers & renters**, who get instant, qualified service instead of a callback days later.
 
 ## The solution narrative
-- A **voice agent (SLNG)** qualifies the lead **in conversation** — intent (buy/sell/rent), property type, area, budget, beds, timeline.
+- A **voice agent (SLNG)** qualifies the lead **in conversation** and **branches** — **buy** or **rent/let** — capturing property type, area, budget, beds, timeline.
 - **Gemini** structures the speech into a clean lead; it's written to **Attio** (Lead + Requirements; Attio = system of record). → [[data-model]]
-- An **n8n** orchestrator instantly reaches out **across channels** with the **best-matched listings** — autonomously, no human in the loop. → [[architecture]]
+- An **n8n** orchestrator instantly **WhatsApps a link to a swipe app** showing the **best-matched listings** — the lead **swipes interested/pass** (or opts out), and **those choices flow straight back into Attio**. No one on the agency side lifts a finger. → [[architecture]]
 
 ## The wow moment
-- You **talk to it**, become a **qualified lead**, and within **seconds** get a **WhatsApp** with your **top-matched homes** + a **booked viewing call**.
-- **No human touched it** — voice in → Attio lead → matched listings → multichannel outreach out. That's the whole demo. → [[demo]]
+- You **talk to it**, become a **qualified lead**, and within **seconds** get a **WhatsApp link**. Tap it and you're **swiping your top-matched homes like Tinder** — yes/no, with photos and the key details.
+- Every swipe **updates the CRM in real time**, and you can **reply "stop"** to opt out. Voice in → Attio lead → matched listings → swipe app → choices back in Attio — **no agent touched it.** That's the whole demo. → [[demo]]
 
 ## Why now (💡 idea)
-- 💡 **Good voice infra** — SLNG makes conversational intake (and outbound calls) a few hours of work, not a project.
+- 💡 **Good voice infra** — SLNG makes conversational intake a few hours of work, not a project.
 - 💡 **Cheap LLM structuring** — Gemini turns messy speech into a clean, typed lead reliably.
 - 💡 **Agentic CRM primitives** — Attio (Workflows / MCP / REST) is a CRM you can program an agent against.
-- 💡 **Workflow automation** — n8n wires the multichannel outreach without bespoke glue code.
-- 💡 **Multi-attribute ranking** — Superlinked ranks listings on semantics + price/beds/area in one query. → [[partners]]
+- 💡 **Workflow automation** — n8n wires Attio-trigger → WhatsApp swipe-link → write-back without bespoke glue code.
+- 💡 **The CRM can already filter** — Attio's native list/filter picks the matching listings on price/beds/area, so we don't need a separate matcher. → [[partners]]
 
 ## Differentiation
 - **vs web lead forms** — slow, no qualification; a form just captures, it doesn't act.
-- **vs portals (Rightmove / Zillow)** — they make *you* search; ours is **proactive**, it reaches out to you.
-- **vs manual agent follow-up** — slow and inconsistent; ours is instant and uniform.
-- **Ours =** voice intake **+** reranked matching **+** autonomous multichannel outreach. No one above is all three.
+- **vs portals (Rightmove / Zillow)** — they make *you* search and scroll endless lists; ours is **proactive** — the agent curates your **top 3–5** and sends them to you to swipe.
+- **vs manual agent follow-up** — slow and inconsistent; ours is instant, uniform, and **interactive** (your swipes refine the CRM).
+- **Ours =** voice intake **+** CRM-native matching **+** a **swipe-to-shortlist app** that feeds straight back into the CRM. No one above is all three.
 
 ## A concrete scenario
 1. 🤔 A **buyer calls** the line.
-2. They answer the voice agent: **buy / area / budget / beds** (+ timeline).
+2. They answer the voice agent: **buy / area / budget / beds** (+ timeline). (A renter would hit the **rent/let** branch instead.)
 3. Gemini structures it → an **Attio lead** is created with Requirements.
-4. **Superlinked ranks** the seeded listings against those criteria. 💡 stretch.
-5. **n8n WhatsApps the top 3** listings and **books a viewing call** (SLNG outbound) — all autonomous.
+4. The top **3–5 listings** are matched against those criteria by **Attio's own filtering** (area + beds + price).
+5. **n8n WhatsApps a link** to the **swipe app**; the buyer swipes **interested/pass** on each home, and every choice **writes back to Attio** — all autonomous on the agency side.
 
 ## Non-goals / what this is NOT (⏭️ cut)
-- ⏭️ **Not a property portal** — no search UI; the agent does the matching and the reaching-out.
-- ⏭️ **Not messaging real strangers** — outreach goes to **our own** numbers/inboxes for the demo.
-- ⏭️ **Not the full transaction** — we **draft + dispatch** outreach and book viewings; we don't close legals/contracts.
+- ⏭️ **Not a search portal** — the swipe app shows **only the agent-curated top 3–5**; there's no search bar, filters, or full catalogue to browse. The agent does the matching; you just swipe.
+- ⏭️ **Not messaging real strangers** — the WhatsApp link goes to **our own** number for the demo.
+- ⏭️ **Not the full transaction** — we **qualify, match, and capture interest** via the swipe; we don't book viewings, do legals, or close contracts.
+- ⏭️ **Not multichannel** — v4 is **WhatsApp-only** (the swipe link + opt-out). Telegram/email/outbound-call are cut. → [[decisions]]
 
 ## Open questions (❓ open → [[decisions]])
 - ❓ **Name** — "Orbit" is a leftover placeholder from v1; may not fit real estate. `<fill in>`
 - ❓ **Rerank target** — **listings-for-a-lead** (buyer-facing, most visceral) vs **lead-scoring** (agent-facing). Lean listings-for-a-lead.
-- ❓ **Which channels we actually wire** — recommend **WhatsApp + one SLNG call**; Telegram/email stretch.
+- ✅→ **Channels** — resolved: **WhatsApp only** (swipe link + opt-out). New open Qs: swipe-app hosting + the swipe→Attio write-back path. → `[[decisions]]`
 
 ## Related
 [[overview]] · [[architecture]] · [[data-model]] · [[demo]] · [[decisions]] · [[partners]]

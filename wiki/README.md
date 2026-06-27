@@ -5,11 +5,12 @@ The shared map for our team at the **{Tech: Europe} London AI Hackathon**. Keeps
 the place everyone checks to know what we're building, who's doing what, and what's left.
 
 > ⏱️ **6-hour sprint · hard deadline 19:00 · team of 3.** Submit by **18:30** for a buffer.
-> 🎯 **Track: Attio — The Agentic CRM** (prize: iPad/member). North star: qualify + match + reach out with **no human in the loop**.
+> 🎯 **Track: Attio — The Agentic CRM** (prize: iPad/member). North star: qualify + match + **swipe-to-shortlist** with **no agent in the loop**.
 > 🛰️ **Provisional name: _Orbit_** — a **voice-first real-estate lead engine on Attio**: an SLNG voice agent
-> qualifies a buyer/seller/renter, drops them into Attio, and **n8n** runs autonomous multichannel outreach
-> (call · WhatsApp · Telegram · email) — with **Superlinked** matching listings to each lead.
-> 🔁 **Idea v3 (2026-06-27)** — earlier iterations (event concierge → comms-CRM) are in [decisions](decisions.md).
+> qualifies a buyer or renter (**buy / rent / let**), drops them into Attio, then **n8n WhatsApps a link to a
+> swipe app** ("Tinder for houses") of their top matches — the lead swipes interested/pass (or opts out) and
+> those choices **write back to Attio**. **Attio's own filtering** picks the matches (⏭️ Superlinked dropped).
+> 🔁 **Idea v4 (2026-06-27)** — supersedes the v3 multichannel blast; earlier iterations (event concierge → comms-CRM → v3) are in [decisions](decisions.md).
 
 This is an Obsidian-style wiki: pages cross-link with `[[wikilinks]]`. Conventions live in
 [`CLAUDE.md`](CLAUDE.md). Open the folder in Obsidian for the graph view, or browse on GitHub.
@@ -40,6 +41,6 @@ This is an Obsidian-style wiki: pages cross-link with `[[wikilinks]]`. Conventio
 
 ## First moves at kickoff
 - [ ] Fill in [team](team.md) + claim owners in [tasks](build/tasks.md)
-- [ ] Resolve the open forks in [decisions](decisions.md) — name, which channels to wire, the listings dataset, the lead schema / Attio object model
-- [ ] **First 30 min, all 3 together:** agree the lead schema + Attio object model + channel list (see [team](team.md))
+- [ ] Resolve the open forks in [decisions](decisions.md) — name, **swipe-app stack/hosting**, **swipe→Attio write-back path**, the listings dataset, the lead schema / Attio object model
+- [ ] **First 30 min, all 3 together:** agree the lead schema + Attio object model + the **swipe-app ↔ Attio write-back contract** (see [team](team.md))
 - [ ] Set up the [Attio](https://attio.com/) workspace + drop accounts/keys into [stack](build/stack.md), then start the clock on [timeline](build/timeline.md)

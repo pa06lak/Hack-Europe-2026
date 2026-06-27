@@ -28,13 +28,13 @@ Two artefacts. Both required.
 - Must include:
   - Detailed explanation of the solution
   - **Live walkthrough** of the key features
-- Our script lives in `[[demo]]` — the one happy path: a buyer calls → qualified → matched listings → WhatsApp + an SLNG call, no human in the loop.
+- Our script lives in `[[demo]]` — the one happy path: a buyer calls → qualified → matched listings → WhatsApp swipe link → swipe → write back, no agent in the loop.
 
 **2. Open-source repository**
 - ⬜ **Public GitHub repo** with the full source code
 - Must include:
   - Comprehensive **README** with setup + install instructions
-  - Clear docs of **all APIs, frameworks, and tools** used (for us: **SLNG, Attio, n8n, Gemini**; + Superlinked / Tavily if we wire the stretch)
+  - Clear docs of **all APIs, frameworks, and tools** used (for us: **SLNG, Attio, n8n, Gemini**; + Tavily if we wire the stretch)
   - Enough technical documentation for the jury to evaluate thoroughly
 
 Full packaging checklist (video + repo + form) in `[[submission]]`.
@@ -59,7 +59,7 @@ Two stages, ending in a live final. Details + how we score in `[[judging]]`.
 | --- | --- | --- |
 | Submit by 19:00 | 🔨 building | Submission path being prepped; see `[[submission]]` |
 | Team ≤ 5 | ✅ decided | **Team = 3** (✅ well under 5) → `[[team]]` |
-| ≥ 3 partner techs | ✅ decided | Core = **SLNG + Attio + n8n + Gemini** (4 ✅ ≥3); Superlinked/Tavily stretch → `[[partners]]` |
+| ≥ 3 partner techs | ✅ decided | Core = **SLNG + Attio + n8n + Gemini** (4 ✅ ≥3); Tavily stretch, ⏭️ Superlinked dropped → `[[partners]]` |
 | Created newly at event | ✅ decided | Built from scratch today (boilerplate scaffolding only) |
 | 2-min video demo | 🔨 building | Script in `[[demo]]`; record near the end |
 | Public GitHub repo + README | 🔨 building | Repo + setup docs → `[[stack]]`, `[[submission]]` |

@@ -8,9 +8,9 @@ owner: shared
 
 # Tracks, Side Challenges & Prizes
 
-> What we can win, and what we're aiming at — for **idea v3** (voice-first real-estate
-> lead engine on Attio). Facts from [[hackathon-manual]]; our picks are flagged and
-> belong in [[decisions]].
+> What we can win, and what we're aiming at — for **idea v4** (voice-first real-estate
+> lead engine on Attio with a WhatsApp → swipe-app payoff). Facts from [[hackathon-manual]];
+> our picks are flagged and belong in [[decisions]].
 
 ## Tracks
 
@@ -24,16 +24,16 @@ owner: shared
 
 - ✅ **Attio track — DECIDED 2026-06-27** (see [[decisions]]). Real-estate lead-to-deal is
   a genuine sales workflow, so we land on-track instead of in the crowded Open Innovation pool.
-- Our pipeline — **voice intake → Attio lead → autonomous multichannel outreach** — maps
+- Our pipeline — **voice intake → Attio lead → match → WhatsApp swipe app → write back** — maps
   straight onto two of Attio's own suggested directions:
-  - **Inbound Lead Router** — SLNG voice agent qualifies a buyer/seller/renter, Gemini
+  - **Inbound Lead Router** — SLNG voice agent qualifies a buyer/renter (buy/rent/let), Gemini
     structures it, we write the lead to Attio. The CRM *receives and routes* a fresh lead. → [[architecture]]
-  - **Outbound Email Agent** — n8n picks up the new lead and runs outreach (SLNG call,
-    WhatsApp, + email/Telegram as stretch), logging outcomes back to Attio.
+  - **Outbound Outreach Agent** — n8n picks up the new lead and **WhatsApps a link to the swipe app**;
+    the buyer's swipes (and opt-out) log straight back to Attio. (⏭️ email/Telegram/call cut in v4.)
 - 🤔 The track explicitly invites off-list problems too ("automate a meaningful chunk of a
   sales/recruiting/customer workflow"), so the named directions are a fit, not a cage.
-- Why this wins on-track: we hit the north star — **qualify + match + reach out with no
-  human in the loop**, with Attio as the system of record. → [[overview]]
+- Why this wins on-track: we hit the north star — **qualify + match + reach out (swipe-to-shortlist) with no
+  agent in the loop**, with Attio as the system of record. → [[overview]]
 
 ## Side challenges
 
@@ -47,12 +47,12 @@ owner: shared
 These ride on partner tech that's already load-bearing in the build — see [[partners]].
 Only chase once the core loop is 🟢; don't let a side prize cost us the demo.
 
-- 💡 **SLNG** — it's the **front door (voice intake) and an outbound channel (the call)**.
-  Two strong uses in one build, not bolted on.
-- 💡 **n8n** — the **orchestrator IS the entry point**: it drives the whole outreach loop
-  off the Attio lead. Best-use case is baked in.
-- 💡 **Superlinked** — **listing rerank** against the lead's criteria, ideally a node inside
-  the n8n flow. Stretch, but a clean, demoable use.
+- 💡 **SLNG** — it's the **front door (voice intake)** that branches buy/rent and qualifies the lead.
+  The whole demo starts here. (⏭️ v4 cut the outbound call.)
+- 💡 **n8n** — the **orchestrator IS the entry point**: it runs the Attio match filter, builds the
+  swipe link, and WhatsApps it off the Attio lead. Best-use case is baked in.
+- ⏭️ **Superlinked** — **dropped**; Attio's native filter does the matching now, so there's no
+  load-bearing Superlinked use to enter. (Would only return as a pure bonus if wildly ahead.)
 - ⏭️ **Aikido** (most secure build) — not our focus; security hardening isn't where our
   points are in 6h.
 

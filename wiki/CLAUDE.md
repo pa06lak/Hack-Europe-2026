@@ -6,12 +6,13 @@ aligned while the clock runs. It is **not** the code repo and **not** a pitch de
 shared map everyone checks to know what we're building, who's doing what, and what's left.
 
 **One line (provisional):** *Orbit* — a **voice-first real-estate lead engine on Attio**: an **SLNG** voice
-agent qualifies buyers/sellers/renters, drops them into **Attio** as leads, and an **n8n** orchestrator runs
-autonomous multichannel outreach (calls, WhatsApp, Telegram, email) — with **Superlinked** matching listings
-to each lead. See `[[overview]]`. 🎯 **Attio track**; north star: close the loop without a human.
+agent qualifies a buyer or renter (**buy / rent / let**), drops them into **Attio** as a lead, and an **n8n**
+orchestrator **WhatsApps a link to a swipe app** ("Tinder for houses") of their top matches — the lead swipes
+interested/pass (or opts out) and those choices **write back to Attio**. **Attio's own filtering** picks the matches.
+See `[[overview]]`. 🎯 **Attio track**; north star: close the loop without an agent.
 
 > ⚠️ **The name "Orbit" is provisional** — and may not fit the real-estate idea. Placeholder until the team decides — see `[[decisions]]`.
-> 🔁 **Idea v3 (2026-06-27):** voice *intake* → Attio → n8n outreach (+ Superlinked rerank), focused on **real estate**. Earlier iterations (event concierge → comms-ingestion CRM) are recorded in `raw/idea-brief.md` + `[[decisions]]`.
+> 🔁 **Idea v4 (2026-06-27):** voice *intake* (buy/rent branch) → Attio (matches via its own filter) → n8n **WhatsApps a swipe-app link** (GitHub Pages) → swipes write back to the Attio person. Supersedes v3's multichannel blast; ⏭️ Superlinked dropped. Earlier iterations (event concierge → comms-ingestion CRM → v3) are in `raw/idea-brief.md` + `[[decisions]]`.
 > 👥 **Team = 3 people.** 6-hour sprint, hard deadline 19:00.
 
 > ⏱️ **The dominant constraint is time: ~6 hours, hard deadline 19:00.** Every page should help us
@@ -56,7 +57,7 @@ techeurope/
 ├── product/
 │   ├── concept.md             # problem, who it's for, solution, the wow moment
 │   ├── voice-intake.md        # the SLNG voice agent's qualifying questions (= the lead schema)
-│   ├── architecture.md        # the pipeline end-to-end (voice → Attio → Superlinked → n8n)
+│   ├── architecture.md        # the pipeline end-to-end (voice → Attio → n8n → swipe app)
 │   └── data-model.md          # Attio objects: Leads, Requirements, Listings
 ├── build/
 │   ├── timeline.md            # the 6-hour hour-by-hour plan (the most important page)
@@ -117,10 +118,11 @@ Add pages only if they earn their keep in 6 hours. Keep one canonical page per t
 ## Origin (for context)
 
 We're at the {Tech: Europe} London AI Hackathon (London), 6-hour sprint, **3-person team**, >20k€ prize
-pool. The idea went through three iterations (2026-06-27, see `[[decisions]]`): personal event concierge →
-comms-ingestion relationship CRM → **the committed idea: a voice-first real-estate lead engine on Attio.**
-A voice agent (**SLNG**) qualifies a buyer/seller/renter, writes the lead to **Attio**, and **n8n**
-orchestrates autonomous multichannel outreach (SLNG calls, WhatsApp, Telegram, email), with **Superlinked**
-reranking listings to the lead. We're entering the **Attio track**. Earlier briefs in `raw/idea-brief.md`;
+pool. The idea iterated (2026-06-27, see `[[decisions]]`): personal event concierge → comms-ingestion
+relationship CRM → v3 voice-engine-with-multichannel-blast → **the committed idea (v4): a voice-first
+real-estate lead engine on Attio with a WhatsApp → swipe-app payoff.** A voice agent (**SLNG**) qualifies a
+buyer or renter (buy/rent/let), writes the lead to **Attio**, and **n8n** **WhatsApps a link to a swipe app**
+("Tinder for houses") of their top matches; the lead swipes interested/pass (or opts out) and those choices
+**write back to Attio**, with **Attio's own filtering** picking the matches. We're entering the **Attio track**. Earlier briefs in `raw/idea-brief.md`;
 rules in `raw/hackathon-manual.md`. The discipline this wiki keeps alive: **lock scope early, protect the
 demo, submit on time.**

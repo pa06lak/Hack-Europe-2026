@@ -9,42 +9,47 @@ owner: shared
 # Architecture — end-to-end pipeline
 
 > ⏱️ 6-hour sprint, hard deadline 19:00, 3 people. Everything here is sized to be buildable in time and to **protect the demo**. See `[[timeline]]`, `[[concept]]`, `[[stack]]`, `[[team]]`.
-> 🔁 Re-pointed for **idea v3**: a **voice-first real-estate lead engine on Attio** — SLNG voice intake → Attio lead → match listings → n8n multichannel outreach → log back. Earlier ideas (event concierge → comms-ingestion CRM) are history only. See `[[decisions]]`.
-> 🎯 Partner-tech rule: we need **≥3** to qualify. Core pipeline leans on **SLNG + Attio + n8n + Gemini** (4 ✅); Superlinked + Tavily are stretch. See `[[partners]]`.
+> 🔁 Re-pointed for **idea v3** (voice-first real-estate lead engine on Attio), then **idea v4 (2026-06-27)**: the outreach centrepiece becomes a **WhatsApp → swipe-app ("Tinder for houses")** loop instead of a multichannel blast. n8n WhatsApps **one link** to a swipe UI of the lead's top matches; the lead swipes interested/pass or opts out via the WhatsApp bot; **both write back to Attio.** Telegram/email/outbound-call are **cut**; intake branches **buy vs rent/let** (sell dropped). See `[[decisions]]`.
+> 🎯 Partner-tech rule: we need **≥3** to qualify. Core pipeline leans on **SLNG + Attio + n8n + Gemini** (4 ✅); ⏭️ **Superlinked dropped** (Attio's own filtering does the matching), Tavily stays stretch. The swipe app is our **own front-end**, not a partner tech. See `[[partners]]`.
 
 ## Data-flow (one-liner)
-`Buyer calls SLNG → voice agent qualifies (intent·type·area·budget·beds·timeline) → Gemini structures a lead JSON → write to Attio (Lead+Requirements; Listings seeded; system of record) → Superlinked ranks listings vs criteria → n8n runs multichannel outreach (SLNG call / WhatsApp / Telegram / email) → log outcomes back to Attio → loop.`
+`Buyer calls SLNG → voice agent qualifies & branches (buy vs rent/let) → Gemini structures a lead JSON → write to Attio (Lead+Requirements; Listings seeded; system of record) → match top 3–5 listings vs criteria → n8n WhatsApps a link to the SWIPE APP → lead swipes interested/pass (or opts out via the bot) → both write back to Attio → loop.`
 
 ## Pipeline (ASCII)
 
 ```
- [1] VOICE INTAKE              [2] WRITE TO ATTIO          [3] MATCH (Superlinked)
+ [1] VOICE INTAKE              [2] WRITE TO ATTIO          [3] MATCH
  SLNG voice agent         →    create Lead/Contact     →   rank seeded Listings
- qualifies the caller:         + Requirements              vs the lead's criteria
- intent (buy/sell/rent)        ★ Attio = system          (semantic + price/beds/area)
- type·area·budget·beds·         of record                 💡 STRETCH — runs BEFORE
- timeline                       (REST API or MCP)          outreach, ideally as an
-   │  Gemini parses                  │                      HTTP node INSIDE n8n
-   │  → lead JSON                    │                            │
-   ▼                                 ▼                            ▼
- (fallback: form /          (fallback: pre-seed         (fallback: simple SQL /
-  typed input if STT          workspace + a couple        attribute filter match)
-  is shaky)                    live writes)                      │
-                                                                 ▼
-                              [5] LOOP                    [4] ORCHESTRATE (n8n)  ★ centrepiece
-                              outcomes update Attio  ◀──   trigger: Attio new/updated lead
-                              nurture continues           → multichannel outreach:
-                              → re-trigger n8n               SLNG call · WhatsApp
-                                                            · Telegram · email
-                                                          → write outcomes back to Attio
-                                                          (no human in the loop)
+ qualifies + BRANCHES:         + Requirements              vs the lead's criteria
+   • BUY      (purchase)       ★ Attio = system          (semantic + price/beds/area)
+   • RENT/LET (rental)          of record                 → top 3–5 matches
+ type·area·budget·beds·         (REST API or MCP)         via Attio's own filter
+ timeline                            │                      (no Superlinked needed)
+   │  Gemini parses                  │                            │
+   │  → lead JSON                    │                            ▼
+   ▼                                 ▼                     top 3–5 written back to
+ (fallback: form /          (fallback: pre-seed          Lead -MATCHED-> Listing(s)
+  typed input if STT          workspace + a couple              │
+  is shaky)                    live writes)                     ▼
+                                                          [4] ORCHESTRATE (n8n)  ★
+                              [5] WRITE BACK              trigger: Attio new/updated lead
+                              ┌─ swipe: interested/pass   → n8n sends ONE WhatsApp:
+                              └─ opt-out: "stop"             a LINK to the SWIPE APP
+                              both update Attio  ◀────────────────┐
+                                    ▲                             ▼
+                                    │                   ┌──────────────────────────┐
+                                    │                   │  SWIPE APP ("Tinder for  │
+                                    └───────────────────┤  houses") on GitHub Pages│
+                                   (app PATCHes the      │  — top 3–5, yes/no, info │
+                                    Attio person, direct)│  + WhatsApp opt-out bot  │
+                                                         └──────────────────────────┘
 ```
 
 ## Stages
 Each stage: **what / tech / demo-safe fallback.**
 
 ### 1. Voice intake (SLNG + Gemini)
-- **What:** conversational qualification — the agent asks for **intent (buy/sell/rent), property type (house/apartment), area, budget, beds, timeline** and **Gemini** drives/parses the answers into a structured **lead JSON**. This is the front door. → `[[concept]]`
+- **What:** conversational qualification — the agent detects intent and **branches into one of two question sets** (v4): **BUY** (looking to purchase) or **RENT/LET** (the rental market). It captures **property type (house/apartment), area, budget, beds, timeline**, and **Gemini** parses the answers into a structured **lead JSON**. This is the front door. ⏭️ **sell** is cut for the demo. → `[[concept]]`, `[[voice-intake]]`
 - **Tech:** **SLNG** (voice in, partner ✅, side-challenge eligible) + **Gemini** (parse → structured lead, partner ✅).
 - **Fallback (demo-safe):** 🤔 if voice STT is shaky, drop to a **simple form / typed input** that produces the same lead JSON — every downstream stage still runs.
 
@@ -53,48 +58,53 @@ Each stage: **what / tech / demo-safe fallback.**
 - **Tech:** **Attio** (partner ✅) via **REST API or Attio MCP** (entry point ❓ open — see `[[stack]]`).
 - **Fallback:** 🤔 **pre-seed the Attio workspace** (listings + a sample lead); on stage do a **couple of live writes** so judges see the agent mutate the CRM. Free Attio workspaces are available on the day.
 
-### 3. Match (Superlinked) — 💡 STRETCH
-- **What:** rank the **seeded Listings** against the lead's criteria (**semantic + price / beds / area**) so we know *what to send* before reaching out.
-- **Placement (✅ decided):** run it **before the outreach — ideally as an HTTP node inside the n8n flow** (rank, then act). **NOT after n8n** — that only ranks responses, which is out of scope. See `[[decisions]]`.
-- **Tech:** **Superlinked** (partner ✅, side-challenge eligible) — stretch/bonus, off the critical path.
-- **Fallback:** 🤔 a **simple SQL / attribute filter** (price range + beds + area) returns top listings. The demo must work without Superlinked.
+### 3. Match (Attio's native filtering) ✅
+- **What:** pick the lead's **top 3–5 listings** by filtering the seeded **Listings** object on the lead's criteria (**area + beds + price range**), so we know *what to put in the swipe app*.
+- **Tech (✅ decided):** **Attio's own filter/list functionality** does the matching — no Superlinked, no custom matcher. Run the filter via Attio (an n8n Attio query when building the swipe URL, or a P2 read query). The match is just an Attio query.
+- **Placement:** **before** the WhatsApp send — bake the matched 3–5 into the swipe link.
+- **⏭️ Superlinked dropped:** it was only ever the matcher; Attio covers it. (Could return as a *pure side-challenge bonus* if wildly ahead — off the board for now.) → `[[decisions]]`, `[[partners]]`.
 
-### 4. Orchestrate (n8n) ★ centrepiece
-- **What:** the north star. **Triggered from Attio** (new/updated lead) → run **multichannel outreach** — **SLNG outbound call, WhatsApp, Telegram, email** — then **write outcomes back to Attio**. n8n is the action layer. **No human in the loop.** → `[[demo]]`
-- **Tech:** **n8n** (partner ✅, side-challenge eligible) orchestrating **SLNG (outbound) + channel APIs + Attio (read/write)**; Superlinked called as a node here (stage 3).
-- **Fallback:** ⏭️ wire **WhatsApp + one SLNG call** only; Telegram/email are stretch. Outreach goes to **our own** numbers/inboxes for the demo.
+### 4. Orchestrate (n8n) → Swipe app ★ centrepiece
+- **What (v4):** **Triggered from Attio** (new/updated lead), n8n sends **one WhatsApp message: a link to the swipe app** ("Tinder for houses"). The app shows the lead's **top 3–5 matched listings** (from stage 3) one at a time with photos + key info; the lead **swipes interested / pass**. The same WhatsApp thread also runs an **opt-out bot** — reply to stop ("no longer looking"). n8n is the action layer; the human on the **agency side never touches it.** → `[[demo]]`
+- **Tech:** **n8n** (partner ✅, side-challenge eligible) — Attio trigger → build the per-lead swipe URL (carries an unguessable lead token) → **WhatsApp send** (Twilio sandbox); the **swipe app** is our own front-end reading the matched listings; Superlinked (stage 3) feeds it.
+- **Demo target:** WhatsApp lands on **our own** phone on camera; tap the link, swipe the matches live. The swipe UI **is the money shot** (replaces the v3 callback). → `[[demo]]`
+- **Fallback:** ⏭️ if WhatsApp send is flaky, open the swipe-app URL directly on the phone; if the app backend is shaky, pre-load it with the known lead's matches.
 
-### 5. Loop
-- **What:** outreach **outcomes update Attio** (called / messaged / replied), and nurture continues — an updated lead can re-trigger n8n.
-- **Tech:** **Attio** writes from n8n; same trigger as stage 4.
-- **Fallback:** ⏭️ for the demo, one pass is enough — log outcomes; don't build a real nurture scheduler.
+### 5. Write back (both paths) — the loop
+- **What (v4):** **two** signals flow back into Attio — **(a) swipe results** (`interested` / `pass` per listing) and **(b) opt-out** (lead replies "stop" → mark inactive / not-distressed). Both update the lead so the CRM reflects real intent; an updated lead can re-trigger n8n.
+- **Tech (✅ decided):** the **swipe app (static, GitHub Pages) PATCHes the Attio person/Lead record directly** — `interested` listings onto the person, opt-out as `status`. No n8n hop for the write-back. ⚠️ two derisks: Attio must allow **CORS** from `*.github.io`, and the **Attio token is client-side** — both contained for a throwaway demo workspace (see seam below + `[[decisions]]`).
+- **Fallback:** ⏭️ if CORS blocks the direct write, route it through an **n8n webhook** (server-side) instead. For the demo, write back **interested** swipes + opt-out only; don't build a nurture scheduler. One pass closes the loop.
 
 ## Partner-tech map
 | Stage | Partner tech | Role | Counts toward ≥3? |
 |---|---|---|---|
-| 1. Intake / 4. Outreach | **SLNG** | voice in + out | ✅ |
-| 2. Write / 5. Loop | **Attio** | store + act (system of record) | ✅ |
-| 4. Orchestrate | **n8n** | orchestrate multichannel outreach | ✅ |
-| 1. Parse / drafts | **Gemini** | structure lead + draft messages | ✅ |
-| 3. Match | **Superlinked** | rank listings vs criteria | 💡 stretch |
+| 1. Intake | **SLNG** | voice in (⏭️ outbound call cut in v4) | ✅ |
+| 2. Write / 5. Write-back | **Attio** | store + act (system of record) | ✅ |
+| 4. Orchestrate | **n8n** | Attio trigger → WhatsApp swipe-link + opt-out | ✅ |
+| 1. Parse / drafts | **Gemini** | structure lead + draft the WhatsApp copy | ✅ |
+| 3. Match | **Attio** | native filtering picks the top 3–5 (feeds the swipe app) | ✅ (already counted) |
+| 4. Swipe UI | *(our front-end)* | "Tinder for houses" on GitHub Pages — **not** a partner tech | — |
 | (enrich) | **Tavily** | area/market enrichment | 💡 stretch |
 
-Four partners are load-bearing (**SLNG, Attio, n8n, Gemini**) → we clear ≥3 comfortably. **Superlinked + Tavily** are bonus, not critical path. → `[[partners]]`
+Four partners are load-bearing (**SLNG, Attio, n8n, Gemini**) → we clear ≥3 comfortably. ⏭️ **Superlinked dropped** (Attio's own filtering does the matching); **Tavily** is the remaining bonus. → `[[partners]]`
 
 ## Integration seams (riskiest joins)
 - 🤔 **1 → 2 (intake JSON → Attio schema):** the lead JSON shape must map exactly onto Attio's **Lead/Contact + Requirements** attributes. Pin the object model first so intake can't drift. → `[[data-model]]`
 - 🤔 **2 → 4 (Attio → n8n trigger):** new/updated lead must reliably fire the n8n flow (webhook/poll). Highest demo-visibility join — build and prove it early.
-- 🤔 **3 inside 4 (Superlinked call inside n8n):** the HTTP node calling Superlinked (or the filter fallback) and feeding ranked listings into the outreach step — keep its request/response contract identical for both paths so swapping is free.
-- 🤔 **4 channels (credentials / sends):** WhatsApp / SLNG-outbound / Telegram / email creds and send calls — the touchiest live join. Send to **our own** endpoints; have each channel independently togglable so one failing channel can't sink the demo.
+- 🤔 **3 → swipe app (matched listings → UI):** the top 3–5 (Superlinked or filter) must land in a shape the swipe app reads. Keep that contract identical for both match paths so swapping is free.
+- 🤔 **4 (WhatsApp link send):** n8n builds a per-lead swipe URL (unguessable token) and sends it via WhatsApp (Twilio sandbox — re-join right before the demo). Send to **our own** number.
+- 🤔 **5 (swipe → Attio write-back) — the new highest-risk join:** ✅ decided the **app PATCHes the Attio person directly**, so pin **which person attributes a swipe sets** (e.g. `interested_listings`, `status`). ⚠️ **verify CORS from `*.github.io` early** (a one-line `fetch` test) — if blocked, fall back to an **n8n webhook**. Token is client-side; use a scoped throwaway key. → `[[decisions]]`
 
 ## Risks & cut-lines (drop in this order if behind)
-- ⏭️ **All four channels → WhatsApp + one SLNG call.** Wire the two highest-impact channels; Telegram/email only if time.
-- ⏭️ **Superlinked → simple filter.** Keep ranking visible via a price/beds/area filter; Superlinked is bonus.
-- ⏭️ **Voice intake → form / typed input.** Same lead JSON, so the rest of the pipeline is unaffected.
-- ⏭️ **Outbound SLNG call → skip.** If outbound voice is shaky, a WhatsApp message alone still closes the loop.
-- ⏭️ **Live listings → seeded mock (~15–30).** Already the default; the seeded set is the bedrock that makes the match visible.
+- ⏭️ **Already cut in v4:** Telegram, email, and the SLNG **outbound call** — channel = **WhatsApp only**; **sell** intake.
+- ⏭️ **Opt-out bot → skip.** If the WhatsApp opt-out is shaky, the **swipe app alone** still closes the loop; opt-out is the first thing to drop.
+- ⏭️ **Write-back → interested-only.** Log just `interested` swipes (and opt-out if it works); skip `pass`. The CRM still visibly updates.
+- ⏭️ **Superlinked → simple filter.** Keep ranking visible via a price/beds/area filter feeding the app; Superlinked is bonus.
+- ⏭️ **Voice intake → form / typed input.** Same lead JSON, so the rest of the pipeline (incl. the swipe app) is unaffected.
+- ⏭️ **WhatsApp send → open the URL directly.** If Twilio is flaky, just open the per-lead swipe URL on the phone on camera.
+- ⏭️ **Live listings → seeded mock (~15–30).** Already the default; the seeded set is the bedrock that makes the match (and the swipe cards) visible.
 
-> Rule of thumb: every stage has a **fallback that keeps the happy path alive**. Build on **seeded listings + a known lead + WhatsApp first**, then upgrade live (voice intake, outbound call, Superlinked) as time allows. → `[[timeline]]`
+> Rule of thumb: every stage has a **fallback that keeps the happy path alive**. The non-negotiable spine is **seeded listings → a known lead → matched top 3–5 → the swipe app opens on a phone**. Build that first; layer on live voice intake, the WhatsApp send, opt-out, and Superlinked as time allows. → `[[timeline]]`
 
 ## Related
 `[[data-model]]` · `[[stack]]` · `[[partners]]` · `[[timeline]]` · `[[team]]` · `[[concept]]` · `[[decisions]]`
