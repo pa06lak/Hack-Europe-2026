@@ -1,0 +1,18 @@
+{
+  "name": "orbit-attio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Orbit P2 — Attio REST client + listings seeder",
+  "scripts": {
+    "seed": "tsx src/seed-listings.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

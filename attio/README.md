@@ -24,7 +24,22 @@ Consume `../contracts/lead.schema.json`. Mapping table is in the data-model wiki
 - **REST vs MCP** entry point — recommendation coming from the de-risk brief. Lean REST for n8n compatibility.
 - **Attio → n8n trigger** — does an Attio automation webhook POST straight to n8n on new lead? (the P2↔P3 seam.)
 
+## Run it (TypeScript) — seeder + REST client
+Runs as a **dry run** (logs the requests) with no key, so you can see the exact write shapes first.
+
+```bash
+cd attio
+npm install
+npm run seed          # upsert data/listings.seed.json into Attio Listings (dry-run w/o key)
+npm run typecheck
+```
+
+- Set `ATTIO_API_KEY` in the repo-root `.env` to write for real.
+- Dedupe needs a **unique** attribute: create `listing_id` (text, unique) on Listings, or override
+  `ATTIO_LISTINGS_OBJECT` / `ATTIO_LISTING_MATCH`. Lead upsert dedupes on **email** (`../voice/src/attio.ts`).
+- `src/client.ts` exposes `assertRecord` / `createRecord` / `listRecords` — reuse for the lead write + P3's reads.
+
 ## First hour
-1. Free Attio workspace → create the objects above.
-2. Seed the ~22 listings from `data/listings.seed.json`.
-3. Write client: take a `lead` JSON, upsert Lead + Requirements (no dupes). Smoke-test read+write before anything downstream.
+1. Free Attio workspace → create the objects above (+ a unique `listing_id` on Listings).
+2. `npm run seed` (dry-run first to confirm shapes, then with `ATTIO_API_KEY`).
+3. Confirm the attribute slugs back to P1/P3 so `voice/src/attio.ts` + the n8n flow write the right fields.
