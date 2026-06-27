@@ -14,8 +14,8 @@ const WORD_NUM: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, fi
 function callerText(transcript: string): string {
   const caller = transcript
     .split(/\r?\n/)
-    .filter((l) => /^\s*caller\s*:/i.test(l))
-    .map((l) => l.replace(/^\s*caller\s*:/i, "").trim());
+    .filter((l) => /^\s*(caller|user)\s*:/i.test(l))
+    .map((l) => l.replace(/^\s*(caller|user)\s*:/i, "").trim());
   return (caller.length ? caller.join(" ") : transcript).trim();
 }
 

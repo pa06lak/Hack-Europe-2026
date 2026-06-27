@@ -5,6 +5,7 @@
   "description": "Orbit P1 — SLNG call-end -> Gemini -> validated lead JSON -> Attio",
   "scripts": {
     "extract": "tsx src/cli.ts",
+    "create-agent": "tsx src/create-agent.ts",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit"

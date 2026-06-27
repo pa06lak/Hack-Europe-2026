@@ -65,7 +65,10 @@ first**; Telegram/email are stretch. All outreach goes to **our own** numbers/in
 
 ```dotenv
 # core (idea v3)
-SLNG_API_KEY=<fill in>          # voice intake + outbound calls
+VOICEAI_API_KEY=<fill in>       # SLNG voice agents (Bearer); agents base https://api.agents.slng.ai
+SLNG_REGION=eu-central          # us-east | eu-central | ap-south
+SLNG_WEBHOOK_URL=<fill in>      # public URL -> voice service POST /slng/call-end (e.g. ngrok)
+SLNG_AGENT_ID=<fill in>         # after `cd voice && npm run create-agent`
 ATTIO_API_KEY=<fill in>         # or use Attio MCP config instead of a raw key
 GEMINI_API_KEY=<fill in>
 N8N_API_KEY=<fill in>

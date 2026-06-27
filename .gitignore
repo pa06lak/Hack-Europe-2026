@@ -27,6 +27,9 @@ Thumbs.db
 .vscode/
 *.swp
 
+# --- vendored skills (reinstall: npx skills add slng-ai/skills) ---
+.agents/
+
 # --- local data / scratch ---
 *.local.json
 tmp/

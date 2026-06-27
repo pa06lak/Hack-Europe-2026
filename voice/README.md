@@ -34,6 +34,7 @@ cd voice
 npm install
 npm run extract                      # extract a lead from sample-transcript.txt
 npm run extract -- --file my.txt     # ...from your own transcript
+npm run create-agent                 # create the SLNG inbound agent (dry-run w/o VOICEAI_API_KEY)
 npm run dev                          # webhook server on :3000  (POST /slng/call-end)
 npm run typecheck
 ```
@@ -42,8 +43,10 @@ npm run typecheck
   **Gemini** (`gemini-2.5-flash`, structured output via `responseSchema`).
 - Set `ATTIO_API_KEY` to switch the Attio write from **dry-run** (logs the payload) to a live upsert.
   ⚠️ Attribute slugs + value shapes in `src/attio.ts` must match Alex's Attio model — confirm with one real PUT.
-- `src/`: `cli.ts` (extract) · `server.ts` (webhook) · `gemini.ts` (extractor) · `mock.ts` (offline) ·
-  `attio.ts` (write, dedupe on email) · `lead.ts` (types + contract validation).
+- `src/`: `cli.ts` (extract) · `server.ts` (call_end webhook) · `gemini.ts` (extractor) · `mock.ts` (offline) ·
+  `slng.ts` (SLNG client) · `create-agent.ts` (provision the agent) · `attio.ts` (write, dedupe on email) ·
+  `lead.ts` (types + contract validation). Agent prompt lives in `agent/system-prompt.txt` + `greeting.txt`.
+- **SLNG setup:** see `slng-agent.md`. Docs vendored via `npx skills add slng-ai/skills` → `.agents/skills/` (gitignored).
 
 ## First hour
 1. Stand up the SLNG account + a callable agent that answers and runs the 6-question script.
