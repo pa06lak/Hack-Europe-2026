@@ -1,0 +1,19 @@
+Agent: Hi! I'm Orbit, your property assistant. I can help you buy, sell, or rent. Who am I speaking with?
+Caller: Hi, I'm Alex Carter.
+Agent: Great, Alex. Are you looking to buy, sell, or rent?
+Caller: I'm looking to buy.
+Agent: Which area or neighbourhood?
+Caller: Shoreditch, ideally.
+Agent: House or flat?
+Caller: A flat — a two-bed apartment.
+Agent: And your budget?
+Caller: Around 600k at the most.
+Agent: Any must-haves?
+Caller: Yeah, somewhere near a station, and a balcony would be lovely. Lots of natural light too.
+Agent: When are you hoping to move?
+Caller: In about three months.
+Agent: Best email to send the matches to?
+Caller: It's alex@example.com
+Agent: Okay to follow up by WhatsApp and a quick call?
+Caller: Yes, that's fine.
+Agent: Perfect — so that's a two-bed flat in Shoreditch up to 600k. Sending your matches now.

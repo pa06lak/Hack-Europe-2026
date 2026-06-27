@@ -26,7 +26,27 @@ Don't hard-block on this — see the de-risk brief (coming from the background r
 If SLNG intake is shaky by the freeze (17:30), capture the same answers via a **typed form** → emit the
 **same `lead` JSON** (`source: "form"`). Every downstream stage is unaffected.
 
+## Run it (TypeScript) — ✅ working offline
+Pipeline: **SLNG call-end → Gemini → validated lead JSON → Attio upsert.** Runs with **no keys** (offline mock).
+
+```bash
+cd voice
+npm install
+npm run extract                      # extract a lead from sample-transcript.txt
+npm run extract -- --file my.txt     # ...from your own transcript
+npm run dev                          # webhook server on :3000  (POST /slng/call-end)
+npm run typecheck
+```
+
+- Set `GEMINI_API_KEY` in the repo-root `.env` to switch extraction from the offline mock to real
+  **Gemini** (`gemini-2.5-flash`, structured output via `responseSchema`).
+- Set `ATTIO_API_KEY` to switch the Attio write from **dry-run** (logs the payload) to a live upsert.
+  ⚠️ Attribute slugs + value shapes in `src/attio.ts` must match Alex's Attio model — confirm with one real PUT.
+- `src/`: `cli.ts` (extract) · `server.ts` (webhook) · `gemini.ts` (extractor) · `mock.ts` (offline) ·
+  `attio.ts` (write, dedupe on email) · `lead.ts` (types + contract validation).
+
 ## First hour
 1. Stand up the SLNG account + a callable agent that answers and runs the 6-question script.
-2. Build the **Gemini → lead JSON** step in isolation against `lead.example.json` (force structured output).
-3. Agree the hand-off trigger/endpoint with P2 (how the lead JSON reaches the Attio write client).
+2. Build the **Gemini → lead JSON** step in isolation against `lead.example.json` (force structured output). ✅ done — `npm run extract` with a key.
+3. Agree the hand-off trigger/endpoint with P2 (how the lead JSON reaches the Attio write client). ✅ seam built — `POST /slng/call-end` → `upsertLead`.
+4. **At the booth:** confirm SLNG's call-end payload shape and wire it into `server.ts` (the `transcript` extraction). → `../wiki/build/derisk.md`.
