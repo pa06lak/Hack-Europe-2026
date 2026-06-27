@@ -53,6 +53,8 @@ const callEndTool = {
   show_results_to_llm: false,
 };
 
+// The greeting + system prompt reference {{agency_name}}; provide a default so it
+// resolves on inbound calls (override per-deployment with AGENCY_NAME).
 const agentDef = {
   name: "Orbit — Property Intake",
   greeting: GREETING,
@@ -60,6 +62,7 @@ const agentDef = {
   language: "en",
   region: process.env.SLNG_REGION || "eu-central",
   models: DEFAULT_MODELS,
+  template_defaults: { agency_name: process.env.AGENCY_NAME || "Marlowe Estates" },
   tools: [callEndTool],
 };
 
