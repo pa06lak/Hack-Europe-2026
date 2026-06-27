@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Orbit — swipe your way home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #14171C;
+    --ink-soft: #1E222A;
+    --paper: #FAF7F2;
+    --paper-dim: #ECE6DB;
+    --text: #1A1D23;
+    --muted: #6B7280;
+    --line: rgba(255, 255, 255, 0.08);
+    --like: #5C8A6E;
+    --nope: #D8634A;
+    --shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5), 0 18px 36px -18px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "header header"
+      "stage  saved"
+      "footer footer";
+    gap: 0;
+  }
+
+  header {
+    grid-area: header;
+    padding: 22px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    gap: 16px;
+  }
+
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+  .wordmark span { color: var(--nope); font-style: italic; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .tagline {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+
+  .prefs-btn {
+    background: transparent;
+    color: var(--paper);
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 8px 14px 8px 12px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .prefs-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3); }
+  .prefs-btn .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.2s;
+  }
+  .prefs-btn.active .dot { background: var(--like); box-shadow: 0 0 0 3px rgba(92,138,110,0.2); }
+
+  .stage {
+    grid-area: stage;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 0;
+  }
+
+  .deck {
+    position: relative;
+    width: min(420px, 92%);
+    aspect-ratio: 3 / 4.4;
+    max-height: 100%;
+  }
+
+  .card {
+    position: absolute;
+    inset: 0;
+    background: var(--paper);
+    color: var(--text);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s;
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+  }
+  .card.dragging { transition: none; cursor: grabbing; }
+  .card.gone { transition: transform 0.5s ease-in, opacity 0.5s ease-in; opacity: 0; pointer-events: none; }
+
+  .card .photo {
+    flex: 1 1 60%;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  .card .photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.45) 100%);
+  }
+
+  .price-tag {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 2;
+    color: var(--paper);
+    font-family: 'Fraunces', serif;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+
+  .card .body {
+    padding: 18px 20px 22px;
+    flex-shrink: 0;
+  }
+
+  .addr {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    line-height: 1.15;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .city {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 14px;
+  }
+  .stats {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--text);
+    border-top: 1px solid rgba(0,0,0,0.08);
+    padding-top: 12px;
+  }
+  .stats span { display: flex; align-items: center; gap: 6px; }
+  .stats strong { font-weight: 600; }
+  .stats em { color: var(--muted); font-style: normal; }
+
+  /* Drag stamps */
+  .stamp {
+    position: absolute;
+    top: 28px;
+    padding: 8px 18px;
+    border: 3px solid currentColor;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+    transition: opacity 0.1s;
+  }
+  .stamp.like { right: 24px; color: var(--like); transform: rotate(14deg); }
+  .stamp.nope { left: 24px; color: var(--nope); transform: rotate(-14deg); }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    max-width: 320px;
+  }
+  .empty h2 {
+    font-family: 'Fraunces', serif;
+    color: var(--paper);
+    font-size: 28px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .empty p { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+  .empty button {
+    background: var(--paper);
+    color: var(--ink);
+    border: none;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 0 4px;
+  }
+  .empty button.ghost {
+    background: transparent;
+    color: var(--paper);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .empty button:hover { opacity: 0.92; }
+
+  /* Saved list */
+  .saved {
+    grid-area: saved;
+    border-left: 1px solid var(--line);
+    padding: 24px 22px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .saved h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 18px;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .saved .sub {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 18px;
+  }
+  .saved ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .saved li {
+    background: var(--ink-soft);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    animation: slideIn 0.35s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .saved li img {
+    width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
+  }
+  .saved li .meta { font-size: 13px; min-width: 0; }
+  .saved li .meta .a { font-family: 'Fraunces', serif; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .saved li .meta .p { color: var(--like); font-weight: 600; font-size: 13px; margin-top: 2px; }
+  .saved .none { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Footer / actions */
+  footer {
+    grid-area: footer;
+    padding: 18px 32px 26px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .action {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: var(--ink-soft);
+    color: var(--paper);
+    font-size: 26px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.15s, background 0.2s, color 0.2s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  }
+  .action:hover { transform: translateY(-2px) scale(1.05); }
+  .action:active { transform: translateY(0) scale(0.96); }
+  .action:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .action.nope:hover { background: var(--nope); }
+  .action.like:hover { background: var(--like); }
+  .action.info { width: 48px; height: 48px; font-size: 18px; }
+
+  .hint {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Preferences modal */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fade 0.2s ease;
+  }
+  .scrim.open { display: flex; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--paper);
+    color: var(--text);
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 22px;
+    padding: 28px 28px 22px;
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.6);
+    animation: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes rise { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 26px;
+    letter-spacing: -0.015em;
+    margin-bottom: 4px;
+  }
+  .modal .lede {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 22px;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .field label .val {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: -0.01em;
+  }
+  .field input[type="text"] {
+    width: 100%;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input[type="text"]:focus { border-color: var(--ink); }
+
+  .field input[type="range"] {
+    width: 100%;
+    accent-color: var(--ink);
+  }
+
+  .field textarea {
+    width: 100%;
+    min-height: 140px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .field textarea:focus { border-color: var(--ink); }
+  .field textarea::placeholder { color: #A3A3A3; }
+
+  /* Notes block in sidebar */
+  .notes-block {
+    background: var(--ink-soft);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    margin-bottom: 20px;
+    border-left: 3px solid var(--like);
+    animation: slideIn 0.35s ease;
+  }
+  .notes-block .nlabel {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .notes-block .nlabel button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 2px 4px;
+    font-family: inherit;
+  }
+  .notes-block .nlabel button:hover { color: var(--paper); }
+  .notes-block .ntext {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--paper);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .row .field { margin-bottom: 0; }
+
+  .pill-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    border: 1px solid rgba(0,0,0,0.15);
+    background: #fff;
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pill.selected {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .btn {
+    border: none;
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, background 0.2s;
+  }
+  .btn.primary { background: var(--ink); color: var(--paper); }
+  .btn.primary:hover { background: var(--ink-soft); }
+  .btn.text {
+    background: transparent;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 11px 14px;
+  }
+  .btn.text:hover { color: var(--text); }
+
+  .match-count {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 14px;
+    text-align: center;
+  }
+  .match-count strong { color: var(--text); font-weight: 600; }
+
+  /* Mobile */
+  @media (max-width: 820px) {
+    body {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "header"
+        "stage"
+        "footer";
+    }
+    .saved { display: none; }
+    header { padding: 16px 20px; }
+    .tagline { display: none; }
+    footer { padding: 14px 20px 22px; gap: 16px; }
+    .action { width: 56px; height: 56px; font-size: 22px; }
+    .hint { display: none; }
+    .modal { padding: 24px 22px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">orbit<span>.</span></div>
+  <div class="header-right">
+    <div class="tagline">find the one · swipe to decide</div>
+    <button class="prefs-btn" id="prefsBtn">
+      <span class="dot" id="prefsDot"></span>
+      Preferences
+    </button>
+  </div>
+</header>
+
+<main class="stage">
+  <div class="deck" id="deck"></div>
+  <div class="hint">← nope &nbsp;·&nbsp; → like &nbsp;·&nbsp; drag the card</div>
+</main>
+
+<aside class="saved">
+  <h3>Saved homes</h3>
+  <div class="sub">Your shortlist</div>
+  <div id="notesBlock"></div>
+  <ul id="savedList"></ul>
+  <div class="none" id="savedEmpty">Homes you like will collect here. Swipe right or tap the heart.</div>
+</aside>
+
+<footer>
+  <button class="action nope" id="btnNope" title="Pass (←)" aria-label="Pass">✕</button>
+  <button class="action info" id="btnUndo" title="Undo" aria-label="Undo">↶</button>
+  <button class="action like" id="btnLike" title="Like (→)" aria-label="Like">♥</button>
+</footer>
+
+<!-- Preferences modal -->
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="prefsTitle">
+  <div class="modal">
+    <h2 id="prefsTitle">What are you looking for?</h2>
+    <div class="lede">Tell us in your own words. Your notes will travel with every home you save.</div>
+
+    <div class="field">
+      <label>Your notes <span class="val" id="charCount" style="font-size:12px; color:var(--muted);">0 / 400</span></label>
+      <textarea id="notesInput" maxlength="400" placeholder="e.g. Three beds, quiet street, good light, under $1.2M. Somewhere walkable. Garden a plus."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn text" id="optOutPrefs">Opt out</button>
+      <div>
+        <button class="btn text" id="cancelPrefs">Cancel</button>
+        <button class="btn primary" id="submitPrefs">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Data ---------------------------------------------------------------
+  // priceNum is a USD-ish number used purely for filtering. The display string is what's shown.
+  const HOUSES = [
+    { addr: "47 Larkspur Lane",     city: "Mill Valley, CA",  price: "$1,495,000", priceNum: 1495000, beds: 3, baths: 2, sqft: 1840, img: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=900&q=80" },
+    { addr: "12 Powder Mill Road",  city: "Hudson Valley, NY", price: "$875,000",   priceNum: 875000,  beds: 4, baths: 3, sqft: 2620, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=900&q=80" },
+    { addr: "203 Seacliff Drive",   city: "Cornwall, UK",      price: "£640,000",   priceNum: 800000,  beds: 3, baths: 2, sqft: 1980, img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&q=80" },
+    { addr: "89 Cedar Ridge",       city: "Aspen, CO",         price: "$3,200,000", priceNum: 3200000, beds: 5, baths: 4, sqft: 4120, img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=900&q=80" },
+    { addr: "Flat 4, Hawthorn Mews",city: "Hackney, London",   price: "£785,000",   priceNum: 980000,  beds: 2, baths: 1, sqft: 920,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&q=80" },
+    { addr: "1107 Olive Street",    city: "Austin, TX",        price: "$695,000",   priceNum: 695000,  beds: 3, baths: 2, sqft: 1740, img: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=900&q=80" },
+    { addr: "Casa del Sol, 22",     city: "Tulum, MX",         price: "$540,000",   priceNum: 540000,  beds: 2, baths: 2, sqft: 1380, img: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=900&q=80" },
+    { addr: "6 Birch Hollow",       city: "Stowe, VT",         price: "$1,120,000", priceNum: 1120000, beds: 4, baths: 3, sqft: 2440, img: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=900&q=80" },
+    { addr: "The Glasshouse, Unit 9", city: "Brooklyn, NY",    price: "$1,890,000", priceNum: 1890000, beds: 3, baths: 2, sqft: 2100, img: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=900&q=80" },
+    { addr: "Villa Quattro",        city: "Lake Como, IT",     price: "€2,450,000", priceNum: 2650000, beds: 6, baths: 5, sqft: 5300, img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=900&q=80" }
+  ];
+
+  const DEFAULT_STATE = { notes: "", optedOut: false };
+
+  let userPrefs = { ...DEFAULT_STATE };
+  let queue = [];
+  let saved = [];
+  let history = []; // { house, direction }
+  let seenIds = new Set();
+
+  const deck = document.getElementById('deck');
+  const savedList = document.getElementById('savedList');
+  const savedEmpty = document.getElementById('savedEmpty');
+  const notesBlock = document.getElementById('notesBlock');
+  const btnNope = document.getElementById('btnNope');
+  const btnLike = document.getElementById('btnLike');
+  const btnUndo = document.getElementById('btnUndo');
+
+  // --- Queue / notes state ------------------------------------------------
+  function rebuildQueue() {
+    queue = HOUSES.filter(h => !seenIds.has(h.addr));
+    render();
+  }
+
+  function isPrefsActive() {
+    return userPrefs.notes.trim() !== "" || userPrefs.optedOut;
+  }
+
+  function updatePrefsButton() {
+    const btn = document.getElementById('prefsBtn');
+    btn.classList.toggle('active', userPrefs.notes.trim() !== "");
+    const label = userPrefs.optedOut ? "Set preferences" :
+                  userPrefs.notes.trim() ? "Edit notes" : "Preferences";
+    btn.lastChild.textContent = " " + label;
+  }
+
+  function renderNotes() {
+    if (!userPrefs.notes.trim()) {
+      notesBlock.innerHTML = '';
+      return;
+    }
+    notesBlock.innerHTML = `
+      <div class="notes-block">
+        <div class="nlabel">
+          <span>Looking for</span>
+          <button id="editNotesBtn" title="Edit">Edit</button>
+        </div>
+        <div class="ntext"></div>
+      </div>
+    `;
+    notesBlock.querySelector('.ntext').textContent = userPrefs.notes;
+    document.getElementById('editNotesBtn').onclick = openPrefs;
+  }
+
+  // --- Rendering ----------------------------------------------------------
+  function render() {
+    deck.innerHTML = '';
+
+    if (queue.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.innerHTML = `
+        <h2>That's every home.</h2>
+        <p>You've seen the whole listing. Want another go? Your saved homes and notes will stay where they are.</p>
+        <button id="resetBtn">Reshuffle the deck</button>
+      `;
+      deck.appendChild(empty);
+      document.getElementById('resetBtn').onclick = reshuffleDeck;
+      updateButtons();
+      return;
+    }
+
+    const visible = queue.slice(0, 3);
+    visible.forEach((house) => deck.appendChild(buildCard(house)));
+
+    [...deck.children].reverse().forEach((card, idxFromTop) => {
+      const depth = idxFromTop;
+      if (depth === 0) {
+        card.style.transform = 'translateY(0) scale(1)';
+        card.style.zIndex = 3;
+        attachDrag(card);
+      } else {
+        card.style.transform = `translateY(${depth * 10}px) scale(${1 - depth * 0.04})`;
+        card.style.zIndex = 3 - depth;
+        card.style.pointerEvents = 'none';
+      }
+    });
+
+    updateButtons();
+  }
+
+  function buildCard(house) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `
+      <div class="stamp like">LIKE</div>
+      <div class="stamp nope">NOPE</div>
+      <div class="photo" style="background-image:url('${house.img}')">
+        <div class="price-tag">${house.price}</div>
+      </div>
+      <div class="body">
+        <div class="addr">${house.addr}</div>
+        <div class="city">${house.city}</div>
+        <div class="stats">
+          <span><strong>${house.beds}</strong><em>bd</em></span>
+          <span><strong>${house.baths}</strong><em>ba</em></span>
+          <span><strong>${house.sqft.toLocaleString()}</strong><em>sqft</em></span>
+        </div>
+      </div>
+    `;
+    return el;
+  }
+
+  function renderSaved() {
+    savedList.innerHTML = '';
+    if (saved.length === 0) {
+      savedEmpty.style.display = 'block';
+      return;
+    }
+    savedEmpty.style.display = 'none';
+    saved.forEach(h => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <img src="${h.img}" alt="" />
+        <div class="meta">
+          <div class="a">${h.addr}</div>
+          <div class="p">${h.price} · ${h.city}</div>
+        </div>
+      `;
+      savedList.appendChild(li);
+    });
+  }
+
+  function updateButtons() {
+    const hasCards = queue.length > 0;
+    btnNope.disabled = !hasCards;
+    btnLike.disabled = !hasCards;
+    btnUndo.disabled = history.length === 0;
+  }
+
+  // --- Drag handling ------------------------------------------------------
+  function attachDrag(card) {
+    let startX = 0, startY = 0, dx = 0, dy = 0;
+    let active = false;
+
+    const onDown = (e) => {
+      active = true;
+      card.classList.add('dragging');
+      const p = pointer(e);
+      startX = p.x; startY = p.y;
+      e.preventDefault();
+    };
+    const onMove = (e) => {
+      if (!active) return;
+      const p = pointer(e);
+      dx = p.x - startX;
+      dy = p.y - startY;
+      const rot = dx / 14;
+      card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+      const intent = Math.min(Math.abs(dx) / 120, 1);
+      card.querySelector('.stamp.like').style.opacity = dx > 0 ? intent : 0;
+      card.querySelector('.stamp.nope').style.opacity = dx < 0 ? intent : 0;
+    };
+    const onUp = () => {
+      if (!active) return;
+      active = false;
+      card.classList.remove('dragging');
+      if (dx > 110) flyAway(card, 'like');
+      else if (dx < -110) flyAway(card, 'nope');
+      else {
+        card.style.transform = 'translate(0,0) rotate(0)';
+        card.querySelector('.stamp.like').style.opacity = 0;
+        card.querySelector('.stamp.nope').style.opacity = 0;
+      }
+      dx = 0; dy = 0;
+    };
+
+    card.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    card.addEventListener('touchstart', onDown, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+
+    card._cleanup = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }
+
+  function pointer(e) {
+    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  // --- Decision flow ------------------------------------------------------
+  function flyAway(card, direction) {
+    const off = direction === 'like' ? window.innerWidth : -window.innerWidth;
+    const rot = direction === 'like' ? 25 : -25;
+    card.classList.add('gone');
+    card.style.transform = `translate(${off * 1.2}px, -80px) rotate(${rot}deg)`;
+
+    const house = queue.shift();
+    seenIds.add(house.addr);
+    if (direction === 'like') {
+      saved.unshift(house);
+      renderSaved();
+    }
+    history.push({ house, direction });
+    if (card._cleanup) card._cleanup();
+    setTimeout(render, 280);
+  }
+
+  function decide(direction) {
+    const top = deck.querySelector('.card:not(.gone)');
+    if (!top || queue.length === 0) return;
+    flyAway(top, direction);
+  }
+
+  function undo() {
+    if (history.length === 0) return;
+    const last = history.pop();
+    seenIds.delete(last.house.addr);
+    queue.unshift(last.house);
+    if (last.direction === 'like') {
+      saved.shift();
+      renderSaved();
+    }
+    render();
+  }
+
+  function reshuffleDeck() {
+    seenIds.clear();
+    history = [];
+    rebuildQueue();
+  }
+
+  // --- Preferences modal --------------------------------------------------
+  const scrim = document.getElementById('scrim');
+  const notesInput = document.getElementById('notesInput');
+  const charCount = document.getElementById('charCount');
+
+  function updateCharCount() {
+    charCount.textContent = `${notesInput.value.length} / 400`;
+  }
+
+  function openPrefs() {
+    notesInput.value = userPrefs.notes;
+    updateCharCount();
+    scrim.classList.add('open');
+    setTimeout(() => notesInput.focus(), 100);
+  }
+  function closePrefs() { scrim.classList.remove('open'); }
+
+  document.getElementById('prefsBtn').addEventListener('click', openPrefs);
+  document.getElementById('cancelPrefs').addEventListener('click', closePrefs);
+
+  document.getElementById('submitPrefs').addEventListener('click', () => {
+    userPrefs.notes = notesInput.value.trim();
+    userPrefs.optedOut = false;
+    renderNotes();
+    updatePrefsButton();
+    closePrefs();
+  });
+
+  document.getElementById('optOutPrefs').addEventListener('click', () => {
+    userPrefs.notes = "";
+    userPrefs.optedOut = true;
+    notesInput.value = "";
+    renderNotes();
+    updatePrefsButton();
+    closePrefs();
+  });
+
+  notesInput.addEventListener('input', updateCharCount);
+
+  scrim.addEventListener('click', (e) => { if (e.target === scrim) closePrefs(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && scrim.classList.contains('open')) closePrefs(); });
+
+  // --- Wire up ------------------------------------------------------------
+  btnNope.addEventListener('click', () => decide('nope'));
+  btnLike.addEventListener('click', () => decide('like'));
+  btnUndo.addEventListener('click', undo);
+
+  document.addEventListener('keydown', (e) => {
+    if (scrim.classList.contains('open')) return;
+    if (e.key === 'ArrowLeft') decide('nope');
+    else if (e.key === 'ArrowRight') decide('like');
+    else if ((e.key === 'z' || e.key === 'Z') && (e.metaKey || e.ctrlKey)) { e.preventDefault(); undo(); }
+  });
+
+  // Init
+  rebuildQueue();
+  renderSaved();
+  renderNotes();
+  updatePrefsButton();
+</script>
+</body>
+</html>
