@@ -91,7 +91,7 @@ Add pages only if they earn their keep in 6 hours. Keep one canonical page per t
   (e.g. `[[architecture]]`, `[[timeline]]`, `[[partners]]`). Slugs are unique across folders, so
   the bare slug resolves. **Slug map:** `overview` · `canvas` · `rules` · `tracks-and-prizes` ·
   `judging` · `partners` · `concept` · `voice-intake` · `architecture` · `data-model` · `timeline` · `tasks` ·
-  `stack` · `demo` · `submission` · `decisions` · `team` · `hackathon-manual` · `idea-brief`.
+  `stack` · `derisk` · `demo` · `submission` · `decisions` · `team` · `hackathon-manual` · `idea-brief`.
 - **Dates & times:** ISO 8601 dates. For the sprint, use wall-clock times (e.g. `14:30`) and/or
   H-offsets from kickoff (e.g. `H+2:00`). The hard deadline is **19:00**.
 - **Status discipline:** tag claims and tasks with the markers above. A page of untagged prose is a

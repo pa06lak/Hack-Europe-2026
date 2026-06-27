@@ -41,6 +41,20 @@ date and a one-sentence why. See `[[overview]]` for the idea, `[[timeline]]` for
 
 ---
 
+## Research-informed recommendations (2026-06-27 — confirm at kickoff/booth → `[[derisk]]`)
+
+From a background partner-tech deep-dive. Tagged 🤔 (recommended default) until the team confirms in the room.
+**SLNG API specifics are unverified — confirm at the booth with a real key.**
+
+- 🤔 **Gemini = POST-CALL normalizer, NOT SLNG's brain** — SLNG's conversation LLM is a fixed set; Gemini can't drive the call. SLNG captures the 6 answers; Gemini turns them into the `lead` JSON after the call (or skip Gemini, ship raw variables). Resolves the v3 "SLNG + Gemini" framing.
+- 🤔 **n8n = self-host** — the community SLNG + Attio nodes need it; Cloud is locked + 14-day trial. Write to Attio via the generic **HTTP Request** node (no native Attio node).
+- 🤔 **Attio → n8n trigger = Attio Workflow "Record created → HTTP request"** — carries field values in the body; raw developer webhooks are thin (IDs only).
+- 🤔 **Lead dedupe key = email** (Attio email is unique by default; **phone is not**). Updated the contract + `[[data-model]]`.
+- 🤔 **WhatsApp = Twilio sandbox** (`join <code>`, native n8n Twilio node) — no business verification. Re-join right before the demo (session lapses ~3 days).
+- 🤔 **Gemini model = `gemini-2.5-flash`** + `generateContent` with `responseMimeType: application/json` + `responseSchema` (proven). Use a newer flash if the booth/docs confirm one.
+
+---
+
 ## Cut list (⏭️)
 
 Cutting is good — naming it here means we stop debating it. **Settled as cut** for the 6h:

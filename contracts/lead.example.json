@@ -1,0 +1,21 @@
+{
+  "intent": "buy",
+  "contact": {
+    "name": "Alex Carter",
+    "phone": "+447700900123",
+    "email": "alex@example.com"
+  },
+  "requirements": {
+    "type": "apartment",
+    "area": "Shoreditch",
+    "budget_min": 0,
+    "budget_max": 600000,
+    "beds": 2,
+    "must_haves": "near a station, a balcony or outside space, lots of natural light",
+    "timeline": "3 months"
+  },
+  "property": null,
+  "financing": "mortgage (AIP in place)",
+  "consent": true,
+  "source": "voice"
+}

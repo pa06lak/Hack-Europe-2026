@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbit.hack/contracts/lead.schema.json",
+  "title": "Orbit Lead",
+  "description": "THE CONTRACT. Emitted by Voice/Intake (P1, Gemini-structured), consumed by Attio/Data (P2, write) and Orchestration (P3, read). Demo path = buy/rent (a person looking for a property). See wiki/product/data-model.md and wiki/product/voice-intake.md. Rule: 'not sure' never blocks — leave a field null and move on; only intent + contact.name are truly required.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intent", "contact", "requirements"],
+  "properties": {
+    "intent": {
+      "enum": ["buy", "sell", "rent"],
+      "description": "The branch. buy/rent = looking for a property (feeds matching). sell/let = has a property (use the optional `property` block)."
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "phone": {
+          "type": ["string", "null"],
+          "description": "E.164. Auto-captured from the SLNG call when possible. NOTE: Attio phone is NOT unique by default, so dedupe on email instead (or add a unique phone attribute first). See wiki/build/derisk.md."
+        },
+        "email": {
+          "type": ["string", "null"],
+          "description": "Primary match/dedupe key for the Attio upsert (Attio email is unique by default)."
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "description": "What a buyer/renter wants. Maps onto Attio Lead/Requirements attributes.",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["house", "apartment", null] },
+        "area": { "type": ["string", "null"], "description": "Neighbourhood / postcode, e.g. 'Shoreditch'." },
+        "budget_min": { "type": ["number", "null"] },
+        "budget_max": { "type": ["number", "null"], "description": "buy: max price. rent: pcm." },
+        "beds": { "type": ["integer", "null"] },
+        "must_haves": {
+          "type": ["string", "null"],
+          "description": "Free text — THE semantic signal for Superlinked (garden, parking, pet-friendly, near a station...). Ask openly."
+        },
+        "timeline": { "type": ["string", "null"], "description": "When they hope to move, e.g. '3 months'." }
+      }
+    },
+    "property": {
+      "type": ["object", "null"],
+      "description": "SELL/LET path only — the property they have. Optional; null for buy/rent.",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["house", "apartment", null] },
+        "area": { "type": ["string", "null"] },
+        "beds": { "type": ["integer", "null"] },
+        "features": { "type": ["string", "null"] },
+        "asking_price": { "type": ["number", "null"] },
+        "timeline": { "type": ["string", "null"] }
+      }
+    },
+    "financing": {
+      "type": ["string", "null"],
+      "description": "buy only: 'cash' / 'mortgage' / 'AIP' — hot vs cold qualifier."
+    },
+    "consent": {
+      "type": ["boolean", "null"],
+      "description": "OK to follow up by WhatsApp + a call. Gates the n8n outreach (architecture stage 4)."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["voice", "form"],
+      "default": "voice",
+      "description": "voice = SLNG intake. form = the demo-safe fallback (same JSON, same pipeline)."
+    }
+  }
+}

@@ -83,10 +83,10 @@ work without it (`[[decisions]]`); ideally an HTTP node **inside** n8n (rank, th
 
 ## Attio write shape (illustrative)
 
-Upsert the Lead (match on phone/email so we don't duplicate), then log an outreach record:
+Upsert the Lead (match on **email** — Attio email is unique by default; phone is **not**, so dedupe on email or add a unique phone attr first → `[[derisk]]`), then log an outreach record:
 
 ```http
-PUT /v2/objects/leads/records?matching_attribute=phone
+PUT /v2/objects/leads/records?matching_attribute=email
 { "data": { "values": {
     "name": "Alex Carter",
     "phone": "+44...",
