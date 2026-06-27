@@ -1,0 +1,187 @@
+{
+  "name": "Orbit — P3 Outreach (STARTER)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orbit-lead",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "11111111-1111-4111-8111-111111111111",
+      "name": "Webhook — Attio New Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        300
+      ],
+      "webhookId": "orbit-lead-webhook",
+      "notes": "Attio Workflow 'Record created -> HTTP request' POSTs the lead JSON here. Use the PRODUCTION URL once the workflow is ACTIVE."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// === [b] EXTRACT LEAD FIELDS ============================================\n// The Attio \"Record created -> HTTP request\" automation POSTs the lead JSON\n// (shape = contracts/lead.schema.json). Webhook v2 nests the POST body under\n// $json.body; we fall back to $json so manual \"Execute Node\" tests also work.\nconst incoming = $input.first().json;\nconst lead = incoming.body || incoming;\n\nconst contact = lead.contact || {};\nconst req = lead.requirements || {};\n\nreturn [{\n  json: {\n    intent:        lead.intent ?? null,\n    name:          contact.name ?? null,\n    email:         contact.email ?? null,\n    phone:         contact.phone ?? null,          // E.164, used by the Twilio node\n    area:          req.area ?? null,\n    property_type: req.type ?? null,               // \"house\" | \"apartment\"\n    beds:          req.beds ?? null,\n    budget_min:    req.budget_min ?? null,\n    budget_max:    req.budget_max ?? null,\n    must_haves:    req.must_haves ?? null,          // free-text semantic signal (Superlinked)\n    timeline:      req.timeline ?? null,\n    consent:       lead.consent ?? null,\n    source:        lead.source ?? 'voice',\n    _raw:          lead\n  }\n}];\n"
+      },
+      "id": "22222222-2222-4222-8222-222222222222",
+      "name": "Extract Lead Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        300
+      ],
+      "notes": "Flattens contracts/lead.schema.json into top-level fields. Could be a Set/Edit-Fields node instead."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// === [c] MATCH LISTINGS — simple price / beds / area filter (FALLBACK) ===\n//\n// >>> SWAP-IN POINT FOR SUPERLINKED <<<\n// To rank semantically instead, REPLACE this Code node with an HTTP Request node:\n//   POST https://<your-superlinked-endpoint>/query\n//   Body: { intent, area, property_type, beds, budget_max, must_haves }\n//   Map its ranked results into an array called `matches` with the SAME shape\n//   used below (id, title, type, area, price, beds, features). Keep the\n//   request/response contract identical so the swap is free. (architecture.md stage 3)\n//\n// You can also replace the inline LISTINGS below with a live Attio query:\n//   HTTP Request -> POST https://api.attio.com/v2/objects/listings/records/query\n//   (Bearer <ATTIO_TOKEN>) and feed the returned records in here.\n\nconst lead = $input.first().json;\n\n// --- Demo seed (subset of data/listings.seed.json). Replace with a live fetch. ---\nconst LISTINGS = [\n  {\n    \"id\": \"L001\",\n    \"title\": \"Light-filled 2-bed warehouse conversion, Shoreditch\",\n    \"type\": \"apartment\",\n    \"area\": \"Shoreditch\",\n    \"price\": 575000,\n    \"beds\": 2,\n    \"features\": [\n      \"private balcony\",\n      \"near Shoreditch High Street station\",\n      \"floor-to-ceiling windows\"\n    ]\n  },\n  {\n    \"id\": \"L002\",\n    \"title\": \"Modern 2-bed apartment with balcony, Shoreditch\",\n    \"type\": \"apartment\",\n    \"area\": \"Shoreditch\",\n    \"price\": 549000,\n    \"beds\": 2,\n    \"features\": [\n      \"south-facing balcony\",\n      \"4 min to Old Street station\",\n      \"concierge\"\n    ]\n  },\n  {\n    \"id\": \"L003\",\n    \"title\": \"2-bed with roof terrace, Shoreditch / Hoxton border\",\n    \"type\": \"apartment\",\n    \"area\": \"Shoreditch\",\n    \"price\": 595000,\n    \"beds\": 2,\n    \"features\": [\n      \"shared roof terrace\",\n      \"next to Hoxton station\",\n      \"bike storage\"\n    ]\n  },\n  {\n    \"id\": \"L004\",\n    \"title\": \"Premium 2-bed apartment, central Shoreditch\",\n    \"type\": \"apartment\",\n    \"area\": \"Shoreditch\",\n    \"price\": 650000,\n    \"beds\": 2,\n    \"features\": [\n      \"balcony\",\n      \"gym\",\n      \"underground parking\"\n    ]\n  },\n  {\n    \"id\": \"L005\",\n    \"title\": \"Compact 1-bed apartment, Shoreditch\",\n    \"type\": \"apartment\",\n    \"area\": \"Shoreditch\",\n    \"price\": 450000,\n    \"beds\": 1,\n    \"features\": [\n      \"balcony\",\n      \"near Old Street station\"\n    ]\n  },\n  {\n    \"id\": \"L007\",\n    \"title\": \"2-bed Victorian townhouse, Shoreditch\",\n    \"type\": \"house\",\n    \"area\": \"Shoreditch\",\n    \"price\": 720000,\n    \"beds\": 2,\n    \"features\": [\n      \"private garden\",\n      \"period features\"\n    ]\n  },\n  {\n    \"id\": \"L008\",\n    \"title\": \"Bright 2-bed apartment with balcony, Hoxton\",\n    \"type\": \"apartment\",\n    \"area\": \"Hoxton\",\n    \"price\": 560000,\n    \"beds\": 2,\n    \"features\": [\n      \"balcony\",\n      \"near Hoxton station\",\n      \"canalside\"\n    ]\n  },\n  {\n    \"id\": \"L009\",\n    \"title\": \"2-bed apartment near the tube, Bethnal Green\",\n    \"type\": \"apartment\",\n    \"area\": \"Bethnal Green\",\n    \"price\": 540000,\n    \"beds\": 2,\n    \"features\": [\n      \"near Bethnal Green tube\",\n      \"recently refurbished\"\n    ]\n  },\n  {\n    \"id\": \"L010\",\n    \"title\": \"2-bed warehouse-style apartment, Hackney\",\n    \"type\": \"apartment\",\n    \"area\": \"Hackney\",\n    \"price\": 525000,\n    \"beds\": 2,\n    \"features\": [\n      \"near Hackney Central\",\n      \"communal garden\"\n    ]\n  },\n  {\n    \"id\": \"L012\",\n    \"title\": \"2-bed apartment by Dalston Junction\",\n    \"type\": \"apartment\",\n    \"area\": \"Dalston\",\n    \"price\": 499000,\n    \"beds\": 2,\n    \"features\": [\n      \"near Dalston Junction\",\n      \"bright open-plan living\"\n    ]\n  },\n  {\n    \"id\": \"L018\",\n    \"title\": \"2-bed apartment, Bermondsey\",\n    \"type\": \"apartment\",\n    \"area\": \"Bermondsey\",\n    \"price\": 610000,\n    \"beds\": 2,\n    \"features\": [\n      \"near Bermondsey tube\",\n      \"floor-to-ceiling windows\"\n    ]\n  },\n  {\n    \"id\": \"L022\",\n    \"title\": \"2-bed apartment near the station, Camden\",\n    \"type\": \"apartment\",\n    \"area\": \"Camden\",\n    \"price\": 595000,\n    \"beds\": 2,\n    \"features\": [\n      \"near Camden Town tube\",\n      \"canalside\"\n    ]\n  }\n];\n\nconst wantType   = lead.property_type;\nconst wantBeds   = lead.beds;\nconst budgetMax  = lead.budget_max;\nconst wantArea   = (lead.area || '').toLowerCase();\n\n// Filter: type match (if specified), >= requested beds, <= budget ceiling.\nlet candidates = LISTINGS.filter((l) => {\n  const okType   = !wantType  || l.type === wantType;\n  const okBeds   = wantBeds  == null || l.beds >= wantBeds;\n  const okBudget = budgetMax == null || l.price <= budgetMax;\n  return okType && okBeds && okBudget;\n});\n\n// Rank: exact-area first, then cheapest. (Stand-in for semantic ranking.)\ncandidates.sort((a, b) => {\n  const aArea = a.area.toLowerCase() === wantArea ? 0 : 1;\n  const bArea = b.area.toLowerCase() === wantArea ? 0 : 1;\n  if (aArea !== bArea) return aArea - bArea;\n  return a.price - b.price;\n});\n\nconst matches = candidates.slice(0, 3);\n\nreturn [{ json: { ...lead, matches } }];\n"
+      },
+      "id": "33333333-3333-4333-8333-333333333333",
+      "name": "Match Listings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        300
+      ],
+      "notes": "SWAP FOR SUPERLINKED: replace with an HTTP Request node hitting your Superlinked /query endpoint; keep the 'matches' array shape identical."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// === [d] BUILD WHATSAPP MESSAGE (top 3 matches + viewing offer) =========\nconst d = $input.first().json;\nconst matches = d.matches || [];\nconst name = d.name || 'there';\n\nconst fmtPrice = (p) => '\\u00A3' + Number(p).toLocaleString('en-GB');\n\nconst header = `Hi ${name}! Orbit here.` +\n  (d.area ? ` Based on your search in ${d.area}` : ' Based on your search') +\n  (d.budget_max ? ` up to ${fmtPrice(d.budget_max)}` : '') +\n  `, here ${matches.length === 1 ? 'is my top pick' : `are my top ${matches.length} picks`}:`;\n\nconst body = matches.map((m, i) => {\n  const feats = (m.features || []).slice(0, 2).join(', ');\n  return `${i + 1}. ${m.title} - ${fmtPrice(m.price)}, ${m.beds} bed` + (feats ? ` (${feats})` : '');\n}).join('\\n');\n\nconst footer = matches.length\n  ? \"\\n\\nWant to book a viewing? Reply with a number (1-3) and a day/time that suits you and I'll set it up.\"\n  : \"\\n\\nI couldn't find an exact match yet, but tell me what matters most and I'll keep looking.\";\n\nconst message = header + '\\n\\n' + body + footer;\n\nreturn [{ json: { ...d, message } }];\n"
+      },
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Build WhatsApp Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "from": "+14155238886",
+        "to": "={{ $('Build WhatsApp Message').item.json.phone }}",
+        "toWhatsapp": true,
+        "message": "={{ $('Build WhatsApp Message').item.json.message }}",
+        "options": {}
+      },
+      "id": "55555555-5555-4555-8555-555555555555",
+      "name": "Send WhatsApp (Twilio)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "REPLACE_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Sandbox (PLACEHOLDER)"
+        }
+      },
+      "notes": "From = Twilio WhatsApp SANDBOX number +14155238886 (replace if yours differs). 'toWhatsapp' prefixes both numbers with whatsapp:. Recipient must have texted 'join <code>' to the sandbox first."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.attio.com/v2/objects/outreach/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REPLACE_WITH_ATTIO_BEARER_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ data: { values: { name: 'WhatsApp outreach - ' + ($('Extract Lead Fields').item.json.name || 'lead'), channel: 'whatsapp', lead_email: $('Extract Lead Fields').item.json.email, lead_phone: $('Extract Lead Fields').item.json.phone, matched_listings: ($('Match Listings').item.json.matches || []).map(m => m.id).join(', '), message_sent: $('Build WhatsApp Message').item.json.message, twilio_sid: $json.sid || null, twilio_status: $json.status || null, outreach_at: $now.toISO() } } }) }}",
+        "options": {}
+      },
+      "id": "66666666-6666-4666-8666-666666666666",
+      "name": "Log Outreach to Attio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        300
+      ],
+      "notes": "POST creates an 'outreach' record. Swap to PUT .../records?matching_attribute=<slug> for idempotent upserts. Attio value shapes vary by attribute type (some need arrays) - verify slugs/shapes with one real call. Prefer moving the Bearer token into an 'HTTP Header Auth' credential for the real demo."
+    }
+  ],
+  "connections": {
+    "Webhook — Attio New Lead": {
+      "main": [
+        [
+          {
+            "node": "Extract Lead Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lead Fields": {
+      "main": [
+        [
+          {
+            "node": "Match Listings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Listings": {
+      "main": [
+        [
+          {
+            "node": "Build WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp (Twilio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp (Twilio)": {
+      "main": [
+        [
+          {
+            "node": "Log Outreach to Attio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templatecredsSetupCompleted": false
+  },
+  "tags": []
+}
