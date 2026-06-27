@@ -1,0 +1,22 @@
+# Secrets — never commit
+.env
+.env.*
+*.key
+secrets/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
+
+# Obsidian workspace cache (keep the rest of .obsidian if you add one)
+.obsidian
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Personal source data — keep sensitive exports out of git.
+# (Our raw/ holds only the public manual + idea brief, so it is tracked.
+#  If you drop real WhatsApp/Instagram exports anywhere, ignore them:)
+**/whatsapp-export*
+**/instagram-export*
+*.ig_data
