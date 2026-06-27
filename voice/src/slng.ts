@@ -35,7 +35,7 @@ export interface CreateAgentInput {
 }
 
 function authHeaders(): Record<string, string> {
-  if (!KEY) throw new Error("VOICEAI_API_KEY not set — get one at https://slng.ai/dashboard/api-keys");
+  if (!KEY) throw new Error("VOICEAI_API_KEY not set — get one at https://app.slng.ai/api-keys");
   return { authorization: `Bearer ${KEY}`, "content-type": "application/json" };
 }
 

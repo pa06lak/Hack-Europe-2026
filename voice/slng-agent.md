@@ -29,7 +29,7 @@ gives caller ID. The full tool JSON is built in `src/create-agent.ts` — run it
 they are **not** how we capture answers. Inbound qualification needs none; we capture via the transcript.
 
 ## At the booth — checklist
-1. ☐ Get `VOICEAI_API_KEY` → https://slng.ai/dashboard/api-keys → into repo-root `.env`.
+1. ☐ Get `VOICEAI_API_KEY` → https://app.slng.ai/api-keys (pick **Consumer / general API access**, not Batch — one key works across hosts) → into repo-root `.env`.
 2. ☐ Validate (no credits used):
    `curl -sS -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $VOICEAI_API_KEY" https://api.slng.ai/v1/me` → `200`.
 3. ☐ Set `SLNG_REGION` (`eu-central`) and `SLNG_WEBHOOK_URL` = a public tunnel to `/slng/call-end`
