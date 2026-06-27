@@ -3,7 +3,7 @@ import "./env";
 // SLNG Voice Agents client. Base + auth per the official slng-ai skill (.agents/skills/agents).
 // Agents API is a SEPARATE base from the unified TTS/STT API. Auth = VOICEAI_API_KEY.
 const AGENTS_BASE = process.env.VOICEAI_AGENTS_BASE_URL || "https://api.agents.slng.ai";
-const KEY = process.env.VOICEAI_API_KEY;
+const KEY = process.env.VOICEAI_API_KEY || process.env.SLNG_API_KEY; // SLNG_API_KEY accepted as a fallback name
 export const SLNG_CONFIGURED = !!KEY;
 
 export interface SlngModels {
